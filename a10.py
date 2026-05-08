@@ -1,6 +1,6 @@
 import re, string, calendar, requests, time
-from wikipedia import WikipediaPage
 import wikipedia
+from wikipedia import WikipediaPage
 from bs4 import BeautifulSoup
 from match import match
 from typing import List, Callable, Tuple, Any, Match
@@ -151,6 +151,19 @@ def polar_radius(matches: List[str]) -> List[str]:
     """
     return [get_polar_radius(matches[0])]
 
+def get_orbital_period(planet_name: str) -> str:
+    """Gets the orbital period (year length) of a planet."""
+    infobox_text = clean_text(get_first_infobox_text(get_page_html(planet_name)))
+    pattern = r"Orbital period(?:.*?)(?P<period>[\d,.]+)(?:\s+)(?P<unit>d|days|yr|years)"
+    error_text = "Page infobox has no orbital period information"
+    match = get_match(infobox_text, pattern, error_text)
+    return f"{match.group('period')} {match.group('unit')}"
+
+
+def orbital_period(matches: List[str]) -> List[str]:
+    return [get_orbital_period(matches[0])]
+
+
 
 # dummy argument is ignored and doesn't matter
 def bye_action(dummy: List[str]) -> None:
@@ -167,9 +180,11 @@ Action = Callable[[List[str]], List[Any]]
 pa_list: List[Tuple[Pattern, Action]] = [
     ("when was % born".split(), birth_date),
     ("what is the polar radius of %".split(), polar_radius),
+    (["what", "is", "the", "polar", "radius", "of", "%"], polar_radius),   
+    (["how", "long", "is", "a", "year", "on", "%"], orbital_period),
+    (["what", "is", "the", "orbital", "period", "of", "%"], orbital_period),
     (["bye"], bye_action),
 ]
-
 
 def search_pa_list(src: List[str]) -> List[str]:
     """Takes source, finds matching pattern and calls corresponding action. If it finds
