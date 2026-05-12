@@ -159,11 +159,30 @@ def get_orbital_period(planet_name: str) -> str:
     match = get_match(infobox_text, pattern, error_text)
     return f"{match.group('period')} {match.group('unit')}"
 
+def get_planet_mass(planet_name: str) -> str:
+    """Gets the mass of the planet"""
+    infobox_text = clean_text(get_first_infobox_text(get_page_html(planet_name)))
+    pattern = r"Mass(?:.*?)(?P<mass>[\d,.]+(?:\s*[x×]\s*10\s*\d+)?)(?:\s*)(?P<unit>kg|kg)"
+    error_text = f"Page infobox for {planet_name} has no planet mass information"  
+    match = get_match(infobox_text, pattern, error_text)
+    return f"{match.group('mass')} {match.group('unit')}"
+
+def get_planet_density(planet_name: str) -> str:
+    """Gets the density of a planet"""
+    infobox_text = clean_text(get_first_infobox_text(get_page_html(planet_name)))
+    pattern = r"Mean density(?:.*?)(?P<density>[\d,.]+)(?:\s*)(?P<unit>g/cm³|kg/m³)"   
+    error_text = f"Page infobox for {planet_name} has no planet density information"
+    match = get_match(infobox_text, pattern, error_text)
+    return f"{match.group('density')} {match.group('unit')}"
 
 def orbital_period(matches: List[str]) -> List[str]:
     return [get_orbital_period(matches[0])]
 
+def planet_mass(matches: List[str]) -> List[str]:
+    return [get_planet_mass(matches[0])]
 
+def planet_density(matches: List[str]) -> List[str]:
+    return [get_planet_density(matches[0])]
 
 # dummy argument is ignored and doesn't matter
 def bye_action(dummy: List[str]) -> None:
@@ -180,9 +199,13 @@ Action = Callable[[List[str]], List[Any]]
 pa_list: List[Tuple[Pattern, Action]] = [
     ("when was % born".split(), birth_date),
     ("what is the polar radius of %".split(), polar_radius),
-    (["what", "is", "the", "polar", "radius", "of", "%"], polar_radius),   
-    (["how", "long", "is", "a", "year", "on", "%"], orbital_period),
-    (["what", "is", "the", "orbital", "period", "of", "%"], orbital_period),
+    ("what is the mass of %".split(), planet_mass),
+    ("how heavy is %".split(), planet_mass), 
+    ("how long is a year on %".split(), orbital_period),
+    ("what is the orbital period of %".split(), orbital_period),
+    ("what is the density of %".split(), planet_density),
+    ("how dense is %".split(), planet_density), 
+    ("what is the mean density of %".split(), planet_density),
     (["bye"], bye_action),
 ]
 
